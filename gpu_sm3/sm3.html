@@ -1,0 +1,306 @@
+
+<head>
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+      inlineMath: [ ['$latex','$'], ["\\(","\\)"] ],
+      displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+      processEscapes: true
+    },
+    "HTML-CSS": { fonts: ["TeX"] }
+  });
+</script>
+
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<meta charset="UTF-8">
+</head>
+
+<h3><strong>Introduction</strong></h3>
+
+<p>SM3 is 256-bit cryptographic hash algorithm derived from <a href="http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">SHA-2 designed by the NSA.</a> It was designed by <a href="https://en.wikipedia.org/wiki/Wang_Xiaoyun">Xiaoyun Wang</a> who is responsible for discovering attacks against many cryptographic hash functions, most notably MD5 and SHA-1. At the CRYPTO 2004 conference, she and co-authors demonstrated collision attacks against MD5 and SHA-0. Attacks against SHA-1 were published later in 2005. SM3 was published in December 2007 by the Chinese National Cryptographic Administration Bureau as part of the Trusted Computing framework in China. SM3 uses a Merkle-Damgard construction like MD4, MD5, SHA-1 and SHA-2. SM means commercial cipher. The full list of cryptographic standards for commercial purposes are as follows.</p>
+
+<ul>
+<li><a href="https://tools.ietf.org/html/draft-sca-cfrg-sm3-02">SM2</a> - Elliptic curve algorithms for digital signatures and key exchange.</li>
+<li><a href="https://tools.ietf.org/html/draft-sca-cfrg-sm3-02">SM3</a> - A cryptographic hash.</li>
+<li><a href="https://tools.ietf.org/id/draft-ribose-cfrg-sm4-09.html">SM4</a> - A block cipher.</li>
+<li><a href="https://eprint.iacr.org/2017/117">SM9</a> - A set of identity-based cryptographic schemes from pairings.</li> 
+</ul>
+
+<h3><strong>Macros and data types</strong></h3>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> R</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>v</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>n</span><span style='color:#808030; '>)</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>v</span><span style='color:#808030; '>)</span><span style='color:#808030; '>&lt;</span><span style='color:#808030; '>&lt;</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>n</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>|</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>v</span><span style='color:#808030; '>)</span><span style='color:#808030; '>></span><span style='color:#808030; '>></span><span style='color:#808030; '>(</span><span style='color:#004a43; '>32</span><span style='color:#808030; '>-</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>n</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> F</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>n</span><span style='color:#808030; '>)</span><span style='color:#004a43; '>for</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>i</span><span style='color:#808030; '>=</span><span style='color:#004a43; '>0</span><span style='color:#808030; '>;</span><span style='color:#004a43; '>i</span><span style='color:#808030; '>&lt;</span><span style='color:#004a43; '>n</span><span style='color:#808030; '>;</span><span style='color:#004a43; '>i</span><span style='color:#808030; '>+</span><span style='color:#808030; '>+</span><span style='color:#808030; '>)</span>
+
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> rev32</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span><span style='color:#004a43; '> __builtin_bswap32</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> rev64</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span><span style='color:#004a43; '> __builtin_bswap64</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span>
+
+<span style='color:#800000; font-weight:bold; '>typedef</span> <span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>long</span> <span style='color:#800000; font-weight:bold; '>long</span> Q<span style='color:#800080; '>;</span>
+<span style='color:#800000; font-weight:bold; '>typedef</span> <span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>int</span> W<span style='color:#800080; '>;</span>
+<span style='color:#800000; font-weight:bold; '>typedef</span> <span style='color:#800000; font-weight:bold; '>unsigned</span> <span style='color:#800000; font-weight:bold; '>char</span> B<span style='color:#800080; '>;</span>
+
+<span style='color:#800000; font-weight:bold; '>typedef</span> <span style='color:#800000; font-weight:bold; '>struct</span> _sm3_ctx <span style='color:#800080; '>{</span>
+    W s<span style='color:#808030; '>[</span><span style='color:#008c00; '>8</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>union</span> <span style='color:#800080; '>{</span>
+      B b<span style='color:#808030; '>[</span><span style='color:#008c00; '>64</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+      W w<span style='color:#808030; '>[</span><span style='color:#008c00; '>16</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+      Q q<span style='color:#808030; '>[</span><span style='color:#008c00; '>8</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>x<span style='color:#800080; '>;</span>
+    Q len<span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>sm3_ctx<span style='color:#800080; '>;</span>
+</pre>
+
+<h3><strong>Initialization</strong></h3>
+
+<p>In the original SHA-2 specification, the 8 initialization values are fractional parts of square roots for the first 8 primes 2..19). See <a href="https://tinycrypt.wordpress.com/2015/11/03/md5-t-and-sha-256-k-constants/">here for more detailed description</a> on how to create these.</p>
+
+<p> 
+$latex H_0^{(0)}\: =\: 6a09e667 $<br>
+$latex H_1^{(0)}\: =\: bb67ae85 $<br>
+$latex H_2^{(0)}\: =\: 3c6ef372 $<br>
+$latex H_3^{(0)}\: =\: a54ff53a $<br>
+$latex H_4^{(0)}\: =\: 510e527f $<br>
+$latex H_5^{(0)}\: =\: 9b05688c $<br>
+$latex H_6^{(0)}\: =\: 1f83d9ab $<br>
+$latex H_7^{(0)}\: =\: 5be0cd19 $</p>
+
+<p>In SM3, the following 8 values are used:</p>
+
+<p> 
+$latex H_0^{(0)}\: =\: 7380166f $<br>
+$latex H_1^{(0)}\: =\: 4914b2b9 $<br>
+$latex H_2^{(0)}\: =\: 172442d7 $<br>
+$latex H_3^{(0)}\: =\: da8a0600 $<br>
+$latex H_4^{(0)}\: =\: a96f30bc $<br>
+$latex H_5^{(0)}\: =\: 163138aa $<br>
+$latex H_6^{(0)}\: =\: e38dee4d $<br>
+$latex H_7^{(0)}\: =\: b0fb0e4e $</p>
+
+<p>Unfortunately, there's no explanation for how, or why these values were selected.</p>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>void</span> sm3_init<span style='color:#808030; '>(</span>sm3_ctx<span style='color:#808030; '>*</span>c<span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>    
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008000; '>0x7380166f</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span><span style='color:#008c00; '>1</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008000; '>0x4914b2b9</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span><span style='color:#008c00; '>2</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008000; '>0x172442d7</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008000; '>0xda8a0600</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008000; '>0xa96f30bc</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008000; '>0x163138aa</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span><span style='color:#008c00; '>6</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008000; '>0xe38dee4d</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span><span style='color:#008c00; '>7</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008000; '>0xb0fb0e4e</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>len <span style='color:#808030; '>=</span><span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+
+<h3><strong>Updating context</strong></h3>
+
+<p>Updating the buffer and state is exactly the same as SHA-2 that is based on the original design for MD4 by Ron Rivest. Once the buffer has 64-bytes of data, it's processed using <var>sm3_compress</var></p>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>void</span> sm3_update<span style='color:#808030; '>(</span>sm3_ctx<span style='color:#808030; '>*</span>c<span style='color:#808030; '>,</span><span style='color:#800000; font-weight:bold; '>const</span> <span style='color:#800000; font-weight:bold; '>void</span><span style='color:#808030; '>*</span>in<span style='color:#808030; '>,</span>W len<span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
+    B <span style='color:#808030; '>*</span>p<span style='color:#808030; '>=</span><span style='color:#808030; '>(</span>B<span style='color:#808030; '>*</span><span style='color:#808030; '>)</span>in<span style='color:#800080; '>;</span>
+    W i<span style='color:#808030; '>,</span> idx<span style='color:#800080; '>;</span>
+    
+    idx <span style='color:#808030; '>=</span> c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>len <span style='color:#808030; '>&amp;</span> <span style='color:#008c00; '>63</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>len <span style='color:#808030; '>+</span><span style='color:#808030; '>=</span> len<span style='color:#800080; '>;</span>
+    
+    <span style='color:#800000; font-weight:bold; '>for</span> <span style='color:#808030; '>(</span>i<span style='color:#808030; '>=</span><span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span>i<span style='color:#808030; '>&lt;</span>len<span style='color:#800080; '>;</span>i<span style='color:#808030; '>+</span><span style='color:#808030; '>+</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
+      c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>x<span style='color:#808030; '>.</span>b<span style='color:#808030; '>[</span>idx<span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>p<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#800080; '>;</span> idx<span style='color:#808030; '>+</span><span style='color:#808030; '>+</span><span style='color:#800080; '>;</span>
+      <span style='color:#800000; font-weight:bold; '>if</span><span style='color:#808030; '>(</span>idx<span style='color:#808030; '>=</span><span style='color:#808030; '>=</span><span style='color:#008c00; '>64</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
+        sm3_compress<span style='color:#808030; '>(</span>c<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        idx<span style='color:#808030; '>=</span><span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span>
+      <span style='color:#800080; '>}</span>
+    <span style='color:#800080; '>}</span>
+<span style='color:#800080; '>}</span>
+</pre>
+
+<h3><strong>Finalization</strong></h3>
+
+<p>This step is also the exact same as SHA-2.</p>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>void</span> sm3_final<span style='color:#808030; '>(</span><span style='color:#800000; font-weight:bold; '>void</span><span style='color:#808030; '>*</span>h<span style='color:#808030; '>,</span>sm3_ctx<span style='color:#808030; '>*</span>c<span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
+    W i<span style='color:#808030; '>,</span>len<span style='color:#808030; '>,</span><span style='color:#808030; '>*</span>p<span style='color:#808030; '>=</span>h<span style='color:#800080; '>;</span>
+    
+    i <span style='color:#808030; '>=</span> len <span style='color:#808030; '>=</span> c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>len <span style='color:#808030; '>&amp;</span> <span style='color:#008c00; '>63</span><span style='color:#800080; '>;</span>
+    <span style='color:#800000; font-weight:bold; '>while</span><span style='color:#808030; '>(</span>i<span style='color:#808030; '>&lt;</span><span style='color:#008c00; '>64</span><span style='color:#808030; '>)</span> c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>x<span style='color:#808030; '>.</span>b<span style='color:#808030; '>[</span>i<span style='color:#808030; '>+</span><span style='color:#808030; '>+</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>x<span style='color:#808030; '>.</span>b<span style='color:#808030; '>[</span>len<span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008000; '>0x80</span><span style='color:#800080; '>;</span>
+    
+    <span style='color:#800000; font-weight:bold; '>if</span><span style='color:#808030; '>(</span>len<span style='color:#808030; '>></span><span style='color:#808030; '>=</span><span style='color:#008c00; '>56</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
+      sm3_compress<span style='color:#808030; '>(</span>c<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+      F<span style='color:#808030; '>(</span><span style='color:#008c00; '>16</span><span style='color:#808030; '>)</span>c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>x<span style='color:#808030; '>.</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>=</span><span style='color:#008c00; '>0</span><span style='color:#800080; '>;</span>
+    <span style='color:#800080; '>}</span>
+    c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>x<span style='color:#808030; '>.</span>q<span style='color:#808030; '>[</span><span style='color:#008c00; '>7</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>rev64<span style='color:#808030; '>(</span><span style='color:#808030; '>(</span>Q<span style='color:#808030; '>)</span>c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>len<span style='color:#808030; '>*</span><span style='color:#008c00; '>8</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    sm3_compress<span style='color:#808030; '>(</span>c<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    F<span style='color:#808030; '>(</span><span style='color:#008c00; '>8</span><span style='color:#808030; '>)</span>p<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>rev32<span style='color:#808030; '>(</span>c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+
+<h3><strong>Compression</strong></h3>
+
+<p>The main difference between SHA-2 and SM3 is in the compression function. In SHA-2, the 512-bit message is expanded into 64 32-bit words. For SM3, it's expanded into 68 32-bit words.  The following two linear functions are defined:</p>
+
+<p>$latex P_1$ for expansion, $latex P_0$ for compression</p>
+
+<p> 
+$latex P_0(X) = X\oplus (X\lll 9)\oplus (X\lll 17)$<br>
+$latex P_1(X) = X\oplus (X\lll 15)\oplus (X\lll 23)$</p> 
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> P0</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>^</span><span style='color:#004a43; '>R</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>9</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span><span style='color:#004a43; '>R</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>17</span><span style='color:#808030; '>)</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> P1</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>^</span><span style='color:#004a43; '>R</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>15</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span><span style='color:#004a43; '>R</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>23</span><span style='color:#808030; '>)</span>
+</pre>
+
+<p>The first part of expansion is similar to SHA-2, but uses different offsets.</p>
+<p>
+$latex \text{for}\: i=16\: \text{to}\: 67\\
+\hphantom{---}W_i\leftarrow P_1(W_{i-16}\oplus W_{i-9}\oplus(W_{i-3}\lll 15))\oplus (W_{i-13}\lll 7)\oplus 
+W_{i-6}\\
+\text{endfor}$
+<br>
+$latex \text{for}\: i = 0\: \text{to}\: 63\\
+\hphantom{---}W_i'=W_i\oplus W_{i+4}\\
+\text{endfor}$
+</p>
+
+<p>The following code performs the first loop of the expansion. The second loop is inlined with the main loop.</p>
+
+<pre style='color:#000000;background:#ffffff;'>    <span style='color:#800000; font-weight:bold; '>for</span><span style='color:#808030; '>(</span>i<span style='color:#808030; '>=</span><span style='color:#008c00; '>16</span><span style='color:#800080; '>;</span>i<span style='color:#808030; '>&lt;</span><span style='color:#008c00; '>68</span><span style='color:#800080; '>;</span>i<span style='color:#808030; '>+</span><span style='color:#808030; '>+</span><span style='color:#808030; '>)</span>
+      w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>P1<span style='color:#808030; '>(</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span><span style='color:#008c00; '>16</span><span style='color:#808030; '>]</span><span style='color:#808030; '>^</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span><span style='color:#008c00; '>9</span><span style='color:#808030; '>]</span><span style='color:#808030; '>^</span>R<span style='color:#808030; '>(</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span><span style='color:#008c00; '>15</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span>R<span style='color:#808030; '>(</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span><span style='color:#008c00; '>13</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span><span style='color:#008c00; '>7</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+</pre>
+
+<p>The additional 4 words in SM3 are required for a separate expansion that I've inlined with the compression function to try minimize code usage.</p>
+
+<p> 
+$latex W_i'=W_i\oplus W_{i+4}\: 0\leq i &lt; 64.$</p>
+
+<p>You can see in main compression loop while creating TT1 and TT2.</p>
+
+<img src="https://tinycrypt.files.wordpress.com/2017/02/exp_code2.png" alt="exp_code2" width="367" height="63" class="aligncenter size-full wp-image-1862" />
+
+<p>For SHA-2, 64 words are used during compression which are <a href="https://tinycrypt.wordpress.com/2015/11/03/md5-t-and-sha-256-k-constants/">described here</a> in detail.</p>
+
+<blockquote>Both use the same sequence of sixty-four constant 32-bit words, K0{256}, K1{256}, …,K63{256} These words represent the first thirty-two bits of the fractional parts of the cube roots of the first sixty-four prime numbers. In hex, these constant words are (from left to right) </blockquote>
+
+<p>For SM3, only 2 constants are used. One is selected depending on the position of loop counter, then a circular shift by loop counter is applied before adding into the state. This certainly helps make SM3 more compact than SHA-2 although I can't say if it strengthens in some way.</p>
+
+<p> 
+$latex T_i =
+\begin{cases}
+79cc4519 &amp; 0\leq i \leq 15 \\[1ex]
+7a879d8a &amp; 16\leq i \leq 63
+\end{cases}$</p>
+
+<pre style='color:#000000;background:#ffffff;'>t <span style='color:#808030; '>=</span> <span style='color:#808030; '>(</span>i <span style='color:#808030; '>&lt;</span> <span style='color:#008c00; '>16</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>?</span> <span style='color:#008000; '>0x79cc4519</span> <span style='color:#800080; '>:</span> <span style='color:#008000; '>0x7a879d8a</span><span style='color:#800080; '>;</span>
+</pre>
+ 
+<p>There are 3 boolean operations used during the compression which are similar to bitwise majority MAJ and bitwise choice CH operations in SHA-2.</p>
+
+<p>
+$latex FF_i(X,Y,Z) =
+\begin{cases}
+X\oplus Y\oplus Z  &amp; 0\leq i \leq 15 \\[1ex]
+(X\wedge Y)\vee (X\wedge Z)\vee (Y\wedge Z) &amp; 16\leq i \leq 63
+\end{cases}$
+<br>
+$latex GG_i(X,Y,Z) =
+\begin{cases}
+X\oplus Y\oplus Z  &amp; 0\leq i \leq 15 \\[1ex]
+(X\wedge Y) \vee (\neg X \wedge Z) &amp; 16\leq i \leq 63
+\end{cases}$
+</p>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> F1</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>y</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>z</span><span style='color:#808030; '>)</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>y</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>z</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> FF</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>y</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>z</span><span style='color:#808030; '>)</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span><span style='color:#808030; '>&amp;</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>y</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span><span style='color:#808030; '>&amp;</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>z</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>y</span><span style='color:#808030; '>)</span><span style='color:#808030; '>&amp;</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>z</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#004a43; '> </span>
+<span style='color:#004a43; '>#</span><span style='color:#004a43; '>define</span><span style='color:#004a43; '> GG</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>y</span><span style='color:#808030; '>,</span><span style='color:#004a43; '>z</span><span style='color:#808030; '>)</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span><span style='color:#808030; '>&amp;</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>y</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span><span style='color:#808030; '>(</span><span style='color:#808030; '>~</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>x</span><span style='color:#808030; '>)</span><span style='color:#808030; '>&amp;</span><span style='color:#808030; '>(</span><span style='color:#004a43; '>z</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span>
+</pre>
+
+<p>
+$latex ABCDEFGH\leftarrow V^{(i)}$
+$latex \begin{aligned}
+\text{for}\; &amp; i= 0\; \text{to}\: 63\\
+&amp; SS_1\leftarrow ((A\lll 12)+E+(T_i\lll i))\lll 7\\
+&amp; SS_2\leftarrow SS_1\oplus(A\lll 12)\\
+&amp; TT_1\leftarrow FF_i(A,B,C)+D+SS_2+W_i'\\
+&amp; TT_2\leftarrow GG_i(E,F,G)+H+SS_1+W_i\\
+&amp; D\leftarrow C\\
+&amp; C\leftarrow B\lll 9\\
+&amp; B\leftarrow A\\
+&amp; A\leftarrow TT_1\\
+&amp; H\leftarrow G\\
+&amp; G\leftarrow F\lll 19\\
+&amp; F\leftarrow E\\
+&amp; E\leftarrow P_0(TT_2)\\
+\text{endfor}&amp;\;
+\end{aligned}$</p>
+
+<h3><strong>Updating state</strong></h3>
+
+<p>At the end of compression function in SHA-2, the input hash is updated by adding the output from compression.</p>
+
+<p> 
+$latex H_0^{(i)}=a+H_0^{(i-1)} $<br>
+$latex H_1^{(i)}=b+H_1^{(i-1)} $<br>
+$latex H_2^{(i)}=c+H_2^{(i-1)} $<br>
+$latex H_3^{(i)}=d+H_3^{(i-1)} $<br>
+$latex H_4^{(i)}=e+H_4^{(i-1)} $<br>
+$latex H_5^{(i)}=f+H_5^{(i-1)} $<br>
+$latex H_6^{(i)}=g+H_6^{(i-1)} $<br>
+$latex H_7^{(i)}=h+H_7^{(i-1)} $<br>
+</p>
+
+<p>In SM3, it is instead XOR'd which follows a <em>Davies-Meyer</em> idea for compression functions.</p>
+
+<p> 
+$latex H_0^{(i)}=a\oplus H_0^{(i-1)} $<br>
+$latex H_1^{(i)}=b\oplus H_1^{(i-1)} $<br>
+$latex H_2^{(i)}=c\oplus H_2^{(i-1)} $<br>
+$latex H_3^{(i)}=d\oplus H_3^{(i-1)} $<br>
+$latex H_4^{(i)}=e\oplus H_4^{(i-1)} $<br>
+$latex H_5^{(i)}=f\oplus H_5^{(i-1)} $<br>
+$latex H_6^{(i)}=g\oplus H_6^{(i-1)} $<br>
+$latex H_7^{(i)}=h\oplus H_7^{(i-1)} $<br>
+</p>
+
+<p>The output state from compression is XORed with the previous hash value to produce the next hash value. In the first round when there is no previous hash value it uses a constant pre-specified initial values.</p>
+
+<p> 
+$latex H_i=E_{m_i}(H_{i-1})\oplus H_{i-1}.$
+</p>
+
+<p>Here's the full compression function.</p>
+
+<pre style='color:#000000;background:#ffffff;'><span style='color:#800000; font-weight:bold; '>void</span> sm3_compress<span style='color:#808030; '>(</span>sm3_ctx<span style='color:#808030; '>*</span>c<span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
+    W t1<span style='color:#808030; '>,</span>t2<span style='color:#808030; '>,</span>i<span style='color:#808030; '>,</span>j<span style='color:#808030; '>,</span>t<span style='color:#808030; '>,</span>s1<span style='color:#808030; '>,</span>s2<span style='color:#808030; '>,</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>8</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span>w<span style='color:#808030; '>[</span><span style='color:#008c00; '>68</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#696969; '>// load data</span>
+    F<span style='color:#808030; '>(</span><span style='color:#008c00; '>16</span><span style='color:#808030; '>)</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>rev32<span style='color:#808030; '>(</span>c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>x<span style='color:#808030; '>.</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+    <span style='color:#696969; '>// expand</span>
+    <span style='color:#800000; font-weight:bold; '>for</span><span style='color:#808030; '>(</span>i<span style='color:#808030; '>=</span><span style='color:#008c00; '>16</span><span style='color:#800080; '>;</span>i<span style='color:#808030; '>&lt;</span><span style='color:#008c00; '>68</span><span style='color:#800080; '>;</span>i<span style='color:#808030; '>+</span><span style='color:#808030; '>+</span><span style='color:#808030; '>)</span>
+      w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>P1<span style='color:#808030; '>(</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span><span style='color:#008c00; '>16</span><span style='color:#808030; '>]</span><span style='color:#808030; '>^</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span><span style='color:#008c00; '>9</span><span style='color:#808030; '>]</span><span style='color:#808030; '>^</span>R<span style='color:#808030; '>(</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span><span style='color:#008c00; '>15</span><span style='color:#808030; '>)</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span>R<span style='color:#808030; '>(</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span><span style='color:#008c00; '>13</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span><span style='color:#008c00; '>7</span><span style='color:#808030; '>)</span><span style='color:#808030; '>^</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>-</span> <span style='color:#008c00; '>6</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+
+    <span style='color:#696969; '>// load internal state</span>
+    F<span style='color:#808030; '>(</span><span style='color:#008c00; '>8</span><span style='color:#808030; '>)</span>x<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+    
+    <span style='color:#696969; '>// compress data</span>
+    F<span style='color:#808030; '>(</span><span style='color:#008c00; '>64</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
+      t<span style='color:#808030; '>=</span><span style='color:#808030; '>(</span>i<span style='color:#808030; '>&lt;</span><span style='color:#008c00; '>16</span><span style='color:#808030; '>)</span><span style='color:#800080; '>?</span><span style='color:#008000; '>0x79cc4519</span><span style='color:#800080; '>:</span><span style='color:#008000; '>0x7a879d8a</span><span style='color:#800080; '>;</span>
+      s2<span style='color:#808030; '>=</span>R<span style='color:#808030; '>(</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span><span style='color:#008c00; '>12</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>      
+      s1<span style='color:#808030; '>=</span>R<span style='color:#808030; '>(</span>s2<span style='color:#808030; '>+</span>e<span style='color:#808030; '>+</span>R<span style='color:#808030; '>(</span>t<span style='color:#808030; '>,</span>i<span style='color:#808030; '>)</span><span style='color:#808030; '>,</span><span style='color:#008c00; '>7</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+      s2<span style='color:#808030; '>^</span><span style='color:#808030; '>=</span>s1<span style='color:#800080; '>;</span>
+      <span style='color:#800000; font-weight:bold; '>if</span><span style='color:#808030; '>(</span>i<span style='color:#808030; '>&lt;</span><span style='color:#008c00; '>16</span><span style='color:#808030; '>)</span> <span style='color:#800080; '>{</span>
+        t1<span style='color:#808030; '>=</span>F1<span style='color:#808030; '>(</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>1</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>2</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>+</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>]</span><span style='color:#808030; '>+</span>s2<span style='color:#808030; '>+</span><span style='color:#808030; '>(</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>^</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>+</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        t2<span style='color:#808030; '>=</span>F1<span style='color:#808030; '>(</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>6</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>+</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>7</span><span style='color:#808030; '>]</span><span style='color:#808030; '>+</span>s1<span style='color:#808030; '>+</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+      <span style='color:#800080; '>}</span> <span style='color:#800000; font-weight:bold; '>else</span> <span style='color:#800080; '>{</span>
+        t1<span style='color:#808030; '>=</span>FF<span style='color:#808030; '>(</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>1</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>2</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>+</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>]</span><span style='color:#808030; '>+</span>s2<span style='color:#808030; '>+</span><span style='color:#808030; '>(</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>^</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>+</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>
+        t2<span style='color:#808030; '>=</span>GG<span style='color:#808030; '>(</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>6</span><span style='color:#808030; '>]</span><span style='color:#808030; '>)</span><span style='color:#808030; '>+</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>7</span><span style='color:#808030; '>]</span><span style='color:#808030; '>+</span>s1<span style='color:#808030; '>+</span>w<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>      
+      <span style='color:#800080; '>}</span>
+      x<span style='color:#808030; '>[</span><span style='color:#008c00; '>3</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>2</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>2</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>R<span style='color:#808030; '>(</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>1</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span><span style='color:#008c00; '>9</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>1</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>0</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>t1<span style='color:#800080; '>;</span>
+      x<span style='color:#808030; '>[</span><span style='color:#008c00; '>7</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>6</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>6</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>R<span style='color:#808030; '>(</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>]</span><span style='color:#808030; '>,</span><span style='color:#008c00; '>19</span><span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>5</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>x<span style='color:#808030; '>[</span><span style='color:#008c00; '>4</span><span style='color:#808030; '>]</span><span style='color:#808030; '>=</span>P0<span style='color:#808030; '>(</span>t2<span style='color:#808030; '>)</span><span style='color:#800080; '>;</span>     
+    <span style='color:#800080; '>}</span>
+    <span style='color:#696969; '>// update internal state</span>
+    F<span style='color:#808030; '>(</span><span style='color:#008c00; '>8</span><span style='color:#808030; '>)</span>c<span style='color:#808030; '>-</span><span style='color:#808030; '>></span>s<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#808030; '>^</span><span style='color:#808030; '>=</span>x<span style='color:#808030; '>[</span>i<span style='color:#808030; '>]</span><span style='color:#800080; '>;</span>
+<span style='color:#800080; '>}</span>
+</pre>
+
+<p><a href="https://github.com/odzhan/tinycrypt/tree/master/hash/sm3">Sources here.</a> Thanks to 0x4d_ for submitting $latex \LaTeX$ equations.</p>
+
